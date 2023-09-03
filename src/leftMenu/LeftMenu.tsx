@@ -1,7 +1,5 @@
 import CandlestickChartIcon from '@mui/icons-material/CandlestickChart';
-import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -22,17 +20,6 @@ type PropsType = {
 const LeftMenu = ({ pageSelection, setPageSelection }: PropsType) => {
     return (
         <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
-            <AppBar
-                position="fixed"
-                sx={{ width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px` }}
-            >
-                <Toolbar>
-                    <Typography variant="h6" noWrap component="div">
-                        {pageSelection}
-                    </Typography>
-                </Toolbar>
-            </AppBar>
             <Drawer
                 sx={{
                     width: drawerWidth,
@@ -40,12 +27,15 @@ const LeftMenu = ({ pageSelection, setPageSelection }: PropsType) => {
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
+                        background: 'rgb(243 243 243)'
                     },
                 }}
                 variant="permanent"
                 anchor="left"
             >
-                <Toolbar>
+                <Toolbar sx={{
+                    background: 'rgb(243 243 243)'
+                }}>
                     <Typography
                         variant="h5"
                         noWrap
@@ -55,32 +45,40 @@ const LeftMenu = ({ pageSelection, setPageSelection }: PropsType) => {
                             mr: 2,
                             display: { xs: 'none', md: 'flex' },
                             margin: 'auto',
-                            fontFamily: 'monospace',
-                            fontWeight: 700,
+                            fontFamily: 'Outfit',
+                            fontWeight: "900",
                             letterSpacing: '.3rem',
                             color: 'inherit',
                             textDecoration: 'none',
                         }}
                     >
-                        Topa
+                        TOPA
                     </Typography>
                 </Toolbar>
                 <Divider />
                 <List sx={{
-                    padding: 0
+                    padding: 0,
                 }}>
                     {['Analysis'].map((text) => (
                         <ListItem key={text} disablePadding onClick={() => setPageSelection(text)} sx={{
-                            backgroundColor: pageSelection === text ? 'primary.main' : 'inherit',
+                            fontFamily: 'Lexend',
+                            backgroundColor: pageSelection === text ? '#253248' : 'inherit',
                             color: pageSelection === text ? 'primary.contrastText' : 'inherit',
                         }}>
-                            <ListItemButton>
+                            <ListItemButton sx={{
+                                fontFamily: 'Lexend'
+                            }}>
                                 <ListItemIcon sx={{
                                     color: pageSelection === text ? 'primary.contrastText' : 'inherit',
                                 }}>
                                     <CandlestickChartIcon />
                                 </ListItemIcon>
-                                <ListItemText primary={text} />
+                                <ListItemText sx={{
+                                    '& .MuiListItemText-primary': {
+                                        fontFamily: 'Lexend',
+                                        fontWeight: pageSelection === text ? '400' : '300',
+                                    }
+                                }} primary={text} />
                             </ListItemButton>
                         </ListItem>
                     ))}
