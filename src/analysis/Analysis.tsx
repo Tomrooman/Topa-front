@@ -1,28 +1,12 @@
 import axios from 'axios';
-import { ColorType, CrosshairMode, IChartApi, createChart } from 'lightweight-charts';
-import { useEffect, useRef } from 'react';
-
-const priceData = [
-    {
-        time: '2018-10-19',
-        open: 180.34,
-        high: 180.99,
-        low: 178.57,
-        close: 179.85
-    },
-    {
-        time: '2018-10-22',
-        open: 180.82,
-        high: 181.4,
-        low: 177.56,
-        close: 178.75
-    },
-];
+import { ColorType, CrosshairMode, IChartApi, UTCTimestamp, createChart } from 'lightweight-charts';
+import { useEffect, useRef, useState } from 'react';
 
 const Analysis = () => {
     const chartContainerRef = useRef({} as HTMLDivElement);
     const chart = useRef({} as IChartApi);
     const rendered = useRef(false);
+    const [data, setData] = useState([]);
 
     useEffect(() => {
         if (!rendered.current) {
@@ -31,10 +15,22 @@ const Analysis = () => {
         }
     }, [rendered]);
 
+    useEffect(() => {
+        if (data.length) {
+            console.log('data : ', data)
+            renderGraph();
+        }
+    }, [data]);
+
     const getDataFromApi = async () => {
         const res = await axios.get('http://localhost:5000/');
-        console.log(res);
-        renderGraph();
+        setData(res.data.map((d: any) => ({
+            open: d.open,
+            high: d.high,
+            low: d.low,
+            close: d.close,
+            time: Math.trunc(d.start_timestamp / 1000) as UTCTimestamp
+        })));
     };
 
     const renderGraph = () => {
@@ -75,8 +71,7 @@ const Analysis = () => {
             wickDownColor: '#838ca1',
             wickUpColor: '#838ca1',
         });
-
-        candleSeries.setData(priceData);
+        candleSeries.setData(data);
     }
 
     return (
