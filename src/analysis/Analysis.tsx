@@ -7,6 +7,9 @@ const Analysis = () => {
     const chart = useRef({} as IChartApi);
     const rendered = useRef(false);
     const [data, setData] = useState([]);
+    const [year, setYear] = useState(2021);
+    const [month, setMonth] = useState(1);
+    const [day, setDay] = useState(1);
 
     useEffect(() => {
         if (!rendered.current) {
@@ -19,11 +22,17 @@ const Analysis = () => {
         if (data.length) {
             console.log('data : ', data)
             renderGraph();
+            getAllDaysFromApi();
         }
     }, [data]);
 
+    const getAllDaysFromApi = async () => {
+        const res = await axios.get(`http://localhost:5000/daysList`);
+        console.log('all day res : ', res);
+    };
+
     const getDataFromApi = async () => {
-        const res = await axios.get('http://localhost:5000/');
+        const res = await axios.get(`http://localhost:5000?year=${year}&month=${month}&day=${day}`);
         setData(res.data.map((d: any) => ({
             open: d.open,
             high: d.high,
@@ -60,16 +69,22 @@ const Analysis = () => {
             },
             timeScale: {
                 borderColor: '#485c7b',
+                timeVisible: true,
+                minBarSpacing: 0.2,
             },
         });
-
+        chart.current.timeScale().fitContent();
         const candleSeries = chart.current.addCandlestickSeries({
-            upColor: '#4bffb5',
-            downColor: '#ff4976',
-            borderDownColor: '#ff4976',
-            borderUpColor: '#4bffb5',
-            wickDownColor: '#838ca1',
-            wickUpColor: '#838ca1',
+            priceFormat: {
+                type: 'price',
+                precision: 4,
+                minMove: 0.0001,
+            },
+            upColor: '#26a69a',
+            downColor: '#ef5350',
+            borderVisible: false,
+            wickUpColor: '#26a69a',
+            wickDownColor: '#ef5350',
         });
         candleSeries.setData(data);
     }
