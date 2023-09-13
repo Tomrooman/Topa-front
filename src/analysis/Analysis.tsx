@@ -1,30 +1,30 @@
+import { Button, SelectChangeEvent } from '@mui/material';
 import axios from 'axios';
-import { ColorType, CrosshairMode, IChartApi, UTCTimestamp, createChart } from 'lightweight-charts';
-import { useEffect, useRef, useState } from 'react';
+import { ColorType, CrosshairMode, UTCTimestamp, createChart } from 'lightweight-charts';
+import { useRef, useState } from 'react';
+import SelectComponent from '../components/selectComponent';
 
 const Analysis = () => {
     const chartContainerRef = useRef({} as HTMLDivElement);
-    const chart = useRef({} as IChartApi);
-    const rendered = useRef(false);
-    const [data, setData] = useState([]);
-    const [year, setYear] = useState(2021);
-    const [month, setMonth] = useState(1);
-    const [day, setDay] = useState(1);
+    const [year, setYear] = useState('2001');
+    const [month, setMonth] = useState('1');
+    const [day, setDay] = useState('2');
 
-    useEffect(() => {
-        if (!rendered.current) {
-            rendered.current = true;
-            getDataFromApi();
-        }
-    }, [rendered]);
+    const handleOnChangeYear = (event: SelectChangeEvent) => {
+        setYear(event.target.value);
+    };
 
-    useEffect(() => {
-        if (data.length) {
-            console.log('data : ', data)
-            renderGraph();
-            getAllDaysFromApi();
-        }
-    }, [data]);
+    const handleOnChangeMonth = (event: SelectChangeEvent) => {
+        setMonth(event.target.value);
+    };
+
+    const handleOnChangeDay = (event: SelectChangeEvent) => {
+        setDay(event.target.value);
+    };
+
+    const handleOnClick = () => {
+        getDataFromApi();
+    };
 
     const getAllDaysFromApi = async () => {
         const res = await axios.get(`http://localhost:5000/daysList`);
@@ -32,18 +32,26 @@ const Analysis = () => {
     };
 
     const getDataFromApi = async () => {
-        const res = await axios.get(`http://localhost:5000?year=${year}&month=${month}&day=${day}`);
-        setData(res.data.map((d: any) => ({
+        const res = await axios.get(`http://localhost:5000/candles?year=${year}&month=${month}&day=${day}`);
+        const formattedData = res.data.map((d: any) => ({
             open: d.open,
             high: d.high,
             low: d.low,
             close: d.close,
             time: Math.trunc(d.start_timestamp / 1000) as UTCTimestamp
-        })));
+        }));
+        renderGraph(formattedData);
     };
 
-    const renderGraph = () => {
-        chart.current = createChart(chartContainerRef.current, {
+    const renderGraph = (formattedData: {
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        time: UTCTimestamp;
+    }[]) => {
+        chartContainerRef.current.innerHTML = '';
+        const chart = createChart(chartContainerRef.current, {
             width: chartContainerRef.current.clientWidth,
             height: chartContainerRef.current.clientHeight,
             layout: {
@@ -73,8 +81,8 @@ const Analysis = () => {
                 minBarSpacing: 0.2,
             },
         });
-        chart.current.timeScale().fitContent();
-        const candleSeries = chart.current.addCandlestickSeries({
+        chart.timeScale().fitContent();
+        const candleSeries = chart.addCandlestickSeries({
             priceFormat: {
                 type: 'price',
                 precision: 4,
@@ -86,20 +94,27 @@ const Analysis = () => {
             wickUpColor: '#26a69a',
             wickDownColor: '#ef5350',
         });
-        candleSeries.setData(data);
+        candleSeries.setData(formattedData);
+
     }
 
     return (
-        <div style={{
-            "display": "flex",
-            "flexDirection": "column",
-            "flex": "1",
-            "height": "50%",
-            "justifyContent": "center",
-        }}>
+        <>
+            <SelectComponent label='Year' selectedItem={year} menuItems={[{ name: '2001', value: '2001' }]} handleOnChange={handleOnChangeYear} />
+            <SelectComponent label='Month' selectedItem={year} menuItems={[{ name: '2001', value: '2001' }]} handleOnChange={handleOnChangeMonth} />
+            <SelectComponent label='Day' selectedItem={year} menuItems={[{ name: '2001', value: '2001' }]} handleOnChange={handleOnChangeDay} />
+            <Button variant="contained" onClick={handleOnClick}>Confirmer</Button>
+            <div style={{
+                "display": "flex",
+                "flexDirection": "column",
+                "flex": "1",
+                "height": "50%",
+                "justifyContent": "center",
+            }}>
 
-            <div ref={chartContainerRef} className="chart-container" style={{ 'flex': '1' }} />
-        </div >
+                <div ref={chartContainerRef} className="chart-container" style={{ 'flex': '1' }} />
+            </div >
+        </>
     );
 };
 
