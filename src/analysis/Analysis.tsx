@@ -1,21 +1,55 @@
 import { Button, SelectChangeEvent } from '@mui/material';
 import axios from 'axios';
 import { ColorType, CrosshairMode, UTCTimestamp, createChart } from 'lightweight-charts';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SelectComponent from '../components/selectComponent';
 
 const Analysis = () => {
     const chartContainerRef = useRef({} as HTMLDivElement);
-    const [year, setYear] = useState('2001');
-    const [month, setMonth] = useState('1');
-    const [day, setDay] = useState('2');
+    const getResponse = useRef(false);
+    const [year, setYear] = useState('');
+    const [month, setMonth] = useState('');
+    const [day, setDay] = useState('');
+    const [yearList, setYearList] = useState<{ name: string, value: string }[]>([]);
+    const [monthList, setMonthList] = useState<{ name: string, value: string }[]>([]);
+    const [dayList, setDayList] = useState<{ name: string, value: string }[]>([]);
+    const [yearsWithMonthsAndDays, setYearsWithMonthsAndDays] = useState<{
+        value: string,
+        months: {
+            value: string,
+            days: {
+                value: string
+            }[]
+        }[]
+    }[]>([]);
+
+    useEffect(() => {
+        if (!getResponse.current) {
+            getResponse.current = true;
+            getAllDaysFromApi();
+        }
+    }, [getResponse]);
 
     const handleOnChangeYear = (event: SelectChangeEvent) => {
         setYear(event.target.value);
+        const selectedYear = yearsWithMonthsAndDays.find((y: any) => y.value === event.target.value);
+        if (selectedYear) {
+            setMonthList(selectedYear.months.map((m: any) => ({ name: m.value, value: m.value })));
+        }
     };
 
     const handleOnChangeMonth = (event: SelectChangeEvent) => {
         setMonth(event.target.value);
+        const selectedYear = yearsWithMonthsAndDays.find((y: any) => y.value === year);
+        if (selectedYear) {
+            const selectedMonth = selectedYear.months.find((m: any) => m.value === event.target.value);
+            if (selectedMonth) {
+                setDayList(selectedMonth.days.map((m: any) => ({
+                    name: m.value.substring(0, m.value.indexOf('.csv')),
+                    value: m.value.substring(0, m.value.indexOf('.csv'))
+                })));
+            }
+        }
     };
 
     const handleOnChangeDay = (event: SelectChangeEvent) => {
@@ -28,7 +62,8 @@ const Analysis = () => {
 
     const getAllDaysFromApi = async () => {
         const res = await axios.get(`http://localhost:5000/daysList`);
-        console.log('all day res : ', res);
+        setYearsWithMonthsAndDays(res.data);
+        setYearList(res.data.map((d: any) => ({ name: d.value, value: d.value })));
     };
 
     const getDataFromApi = async () => {
@@ -38,7 +73,7 @@ const Analysis = () => {
             high: d.high,
             low: d.low,
             close: d.close,
-            time: Math.trunc(d.start_timestamp / 1000) as UTCTimestamp
+            time: Math.trunc(d.start_timestamp / 1000 + (60 * 60 * 2)) as UTCTimestamp // add 2 hours to show time in UTC+2 because the module already remove 2 hours from retreived data
         }));
         renderGraph(formattedData);
     };
@@ -100,9 +135,9 @@ const Analysis = () => {
 
     return (
         <>
-            <SelectComponent label='Year' selectedItem={year} menuItems={[{ name: '2001', value: '2001' }]} handleOnChange={handleOnChangeYear} />
-            <SelectComponent label='Month' selectedItem={year} menuItems={[{ name: '2001', value: '2001' }]} handleOnChange={handleOnChangeMonth} />
-            <SelectComponent label='Day' selectedItem={year} menuItems={[{ name: '2001', value: '2001' }]} handleOnChange={handleOnChangeDay} />
+            <SelectComponent label='Year' selectedItem={year} menuItems={yearList} handleOnChange={handleOnChangeYear} />
+            <SelectComponent label='Month' selectedItem={month} menuItems={monthList} handleOnChange={handleOnChangeMonth} />
+            <SelectComponent label='Day' selectedItem={day} menuItems={dayList} handleOnChange={handleOnChangeDay} />
             <Button variant="contained" onClick={handleOnClick}>Confirmer</Button>
             <div style={{
                 "display": "flex",
