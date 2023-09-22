@@ -135,10 +135,15 @@ const Analysis = () => {
 
     return (
         <>
-            <SelectComponent label='Year' selectedItem={year} menuItems={yearList} handleOnChange={handleOnChangeYear} />
-            <SelectComponent label='Month' selectedItem={month} menuItems={monthList} handleOnChange={handleOnChangeMonth} />
-            <SelectComponent label='Day' selectedItem={day} menuItems={dayList} handleOnChange={handleOnChangeDay} />
-            <Button variant="contained" onClick={handleOnClick}>Confirmer</Button>
+            <div style={{
+                "display": "flex",
+                justifyContent: "center"
+            }}>
+                <SelectComponent label='Year' selectedItem={year} menuItems={yearList} handleOnChange={handleOnChangeYear} />
+                <SelectComponent label='Month' selectedItem={month} menuItems={monthList} handleOnChange={handleOnChangeMonth} />
+                <SelectComponent label='Day' selectedItem={day} menuItems={dayList} handleOnChange={handleOnChangeDay} />
+                <Button variant="contained" onClick={handleOnClick} disabled={!(year && month && day)}>Confirmer</Button>
+            </div>
             <div style={{
                 "display": "flex",
                 "flexDirection": "column",
