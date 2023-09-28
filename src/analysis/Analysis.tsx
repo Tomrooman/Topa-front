@@ -73,7 +73,7 @@ const Analysis = () => {
             high: d.high,
             low: d.low,
             close: d.close,
-            time: Math.trunc(d.start_timestamp / 1000 + (60 * 60 * 2)) as UTCTimestamp // add 2 hours to show time in UTC+2 because the module already remove 2 hours from retreived data
+            time: Math.trunc(d.start_timestamp / 1000 + (60 * 60 * 1)) as UTCTimestamp // add 2 hours to show time in UTC+1 because the module already remove 2 hours from retreived data
         }));
         renderGraph(formattedData);
     };
