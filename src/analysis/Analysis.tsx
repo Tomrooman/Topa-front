@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 import SelectComponent from '../components/selectComponent';
 
 const Analysis = () => {
-    const chartContainerRef = useRef({} as HTMLDivElement);
+    const chartCandlesContainerRef = useRef({} as HTMLDivElement);
+    const chartRsiContainerRef = useRef({} as HTMLDivElement);
     const getResponse = useRef(false);
     const [year, setYear] = useState('');
     const [month, setMonth] = useState('');
@@ -68,15 +69,33 @@ const Analysis = () => {
 
     const getDataFromApi = async () => {
         const { data } = await axios.get(`http://localhost:5000/candles?year=${year}&month=${month}&day=${day}`);
-        const formattedData = data.candles.map((d: any) => ({
+        const formattedCandlesData = data.candles.map((d: any) => ({
             open: d.open,
             high: d.high,
             low: d.low,
             close: d.close,
             time: Math.round(d.start_timestamp / 1000)
         }));
-        console.log(data)
-        renderGraph(formattedData);
+        const formattedRsiData = {
+            "5min": data.rsi.five_min.map((d: any) => ({
+                value: d.rsi,
+                time: Math.round(d.start_timestamp / 1000)
+            })),
+            "30min": data.rsi.thirty_min.map((d: any) => ({
+                value: d.rsi,
+                time: Math.round(d.start_timestamp / 1000)
+            })),
+            "1h": data.rsi.one_hour.map((d: any) => ({
+                value: d.rsi,
+                time: Math.round(d.start_timestamp / 1000)
+            })),
+            "4h": data.rsi.four_hours.map((d: any) => ({
+                value: d.rsi,
+                time: Math.round(d.start_timestamp / 1000)
+            }))
+        };
+        renderGraph(formattedCandlesData);
+        renderRsiLines(formattedRsiData);
     };
 
     const renderGraph = (formattedData: {
@@ -86,10 +105,10 @@ const Analysis = () => {
         close: number;
         time: UTCTimestamp;
     }[]) => {
-        chartContainerRef.current.innerHTML = '';
-        const chart = createChart(chartContainerRef.current, {
-            width: chartContainerRef.current.clientWidth,
-            height: chartContainerRef.current.clientHeight,
+        chartCandlesContainerRef.current.innerHTML = '';
+        const chart = createChart(chartCandlesContainerRef.current, {
+            width: chartCandlesContainerRef.current.clientWidth,
+            height: chartCandlesContainerRef.current.clientHeight,
             layout: {
                 background: { type: ColorType.Solid, color: '#253248' },
                 textColor: 'rgba(255, 255, 255, 0.9)',
@@ -134,6 +153,54 @@ const Analysis = () => {
 
     }
 
+    const renderRsiLines = (rsiData: {
+        "5min": { value: number, time: UTCTimestamp }[],
+        "30min": { value: number, time: UTCTimestamp }[],
+        "1h": { value: number, time: UTCTimestamp }[],
+        "4h": { value: number, time: UTCTimestamp }[]
+    }) => {
+        chartRsiContainerRef.current.innerHTML = '';
+        const chart = createChart(chartRsiContainerRef.current, {
+            width: chartCandlesContainerRef.current.clientWidth,
+            height: chartCandlesContainerRef.current.clientHeight / 2,
+            layout: {
+                background: { type: ColorType.Solid, color: '#253248' },
+                textColor: 'rgba(255, 255, 255, 0.9)',
+            },
+            grid: {
+                vertLines: {
+                    color: '#334158',
+                },
+                horzLines: {
+                    color: '#334158',
+                },
+            },
+            crosshair: {
+                mode: CrosshairMode.Normal,
+            },
+            leftPriceScale: {
+                borderColor: '#485c7b',
+            },
+            rightPriceScale: {
+                borderColor: '#485c7b',
+            },
+            timeScale: {
+                borderColor: '#485c7b',
+                timeVisible: true,
+                minBarSpacing: 0.2,
+            },
+        });
+        const lineSeriesFiveMin = chart.addLineSeries({ color: 'blue' });
+        lineSeriesFiveMin.setData(rsiData["5min"]);
+        const lineSeriesThirtyMin = chart.addLineSeries({ color: 'red' });
+        lineSeriesThirtyMin.setData(rsiData["30min"])
+        const lineSeriesOneHour = chart.addLineSeries({ color: 'green' });
+        lineSeriesOneHour.setData(rsiData["1h"]);
+        const lineSeriesFourHours = chart.addLineSeries({ color: 'purple' });
+        lineSeriesFourHours.setData(rsiData["4h"]);
+        chart.timeScale().fitContent();
+    }
+
     return (
         <>
             <div style={{
@@ -153,7 +220,17 @@ const Analysis = () => {
                 "justifyContent": "center",
             }}>
 
-                <div ref={chartContainerRef} className="chart-container" style={{ 'flex': '1' }} />
+                <div ref={chartCandlesContainerRef} className="chart-container" style={{ 'flex': '1' }} />
+            </div >
+            <div style={{
+                "display": "flex",
+                "flexDirection": "column",
+                "flex": "1",
+                "height": "50%",
+                "justifyContent": "center",
+            }}>
+
+                <div ref={chartRsiContainerRef} className="chart-container" style={{ 'flex': '1' }} />
             </div >
         </>
     );
