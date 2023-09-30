@@ -61,20 +61,21 @@ const Analysis = () => {
     };
 
     const getAllDaysFromApi = async () => {
-        const res = await axios.get(`http://localhost:5000/daysList`);
+        const res = await axios.get(`http://localhost:5000/days_list`);
         setYearsWithMonthsAndDays(res.data);
         setYearList(res.data.map((d: any) => ({ name: d.value, value: d.value })));
     };
 
     const getDataFromApi = async () => {
-        const res = await axios.get(`http://localhost:5000/candles?year=${year}&month=${month}&day=${day}`);
-        const formattedData = res.data.map((d: any) => ({
+        const { data } = await axios.get(`http://localhost:5000/candles?year=${year}&month=${month}&day=${day}`);
+        const formattedData = data.candles.map((d: any) => ({
             open: d.open,
             high: d.high,
             low: d.low,
             close: d.close,
-            time: Math.trunc(d.start_timestamp / 1000 + (60 * 60 * 1)) as UTCTimestamp // add 2 hours to show time in UTC+1 because the module already remove 2 hours from retreived data
+            time: Math.round(d.start_timestamp / 1000)
         }));
+        console.log(data)
         renderGraph(formattedData);
     };
 
