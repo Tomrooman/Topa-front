@@ -1,8 +1,29 @@
 import { Button, SelectChangeEvent } from '@mui/material';
 import axios from 'axios';
-import { ColorType, CrosshairMode, UTCTimestamp, createChart } from 'lightweight-charts';
+import { ColorType, CrosshairMode, SeriesMarkerPosition, SeriesMarkerShape, UTCTimestamp, createChart } from 'lightweight-charts';
 import { useEffect, useRef, useState } from 'react';
 import SelectComponent from '../components/selectComponent';
+
+type TradeModel = {
+    is_available: boolean
+    price: number
+    take_profit: number
+    stop_loss: number
+    type: 'buy' | 'sell'
+    close: number
+    profit: number
+    opened_at: string
+    closed_at: string
+}
+
+type Marker = {
+    time: UTCTimestamp
+    position: SeriesMarkerPosition,
+    color: string,
+    shape: SeriesMarkerShape,
+    text: string,
+    size: number
+}
 
 const Analysis = () => {
     const chartCandlesContainerRef = useRef({} as HTMLDivElement);
@@ -94,9 +115,36 @@ const Analysis = () => {
                 time: Math.round(d.start_timestamp / 1000)
             }))
         };
-        renderGraph(formattedCandlesData);
-        renderRsiLines(formattedRsiData);
+        const tradeMarkers = getTradeMarkers(data.trades);
+        renderGraph(formattedCandlesData, tradeMarkers);
+        renderRsiLines(formattedRsiData, tradeMarkers);
     };
+
+    const getTradeMarkers = (trades: TradeModel[]): Marker[] => {
+        const markers = [];
+        for (const trade of trades) {
+            const closedAt = new Date(trade.closed_at);
+            const openedAt = new Date(trade.opened_at);
+            markers.push(...[
+                {
+                    time: Math.round(openedAt.getTime() / 1000) as UTCTimestamp,
+                    position: 'aboveBar' as SeriesMarkerPosition,
+                    color: trade.profit > 0 ? "green" : "red",
+                    shape: 'arrowDown' as SeriesMarkerShape,
+                    text: trade.type.toUpperCase(),
+                    size: 2
+                }, {
+                    time: Math.round(closedAt.getTime() / 1000) as UTCTimestamp,
+                    position: 'aboveBar' as SeriesMarkerPosition,
+                    color: trade.profit > 0 ? "green" : "red",
+                    shape: 'arrowDown' as SeriesMarkerShape,
+                    text: trade.type.toUpperCase(),
+                    size: 2
+                }
+            ]);
+        };
+        return markers;
+    }
 
     const renderGraph = (formattedData: {
         open: number;
@@ -104,7 +152,7 @@ const Analysis = () => {
         low: number;
         close: number;
         time: UTCTimestamp;
-    }[]) => {
+    }[], tradeMarkers: Marker[]) => {
         chartCandlesContainerRef.current.innerHTML = '';
         const chart = createChart(chartCandlesContainerRef.current, {
             width: chartCandlesContainerRef.current.clientWidth,
@@ -150,7 +198,7 @@ const Analysis = () => {
             wickDownColor: '#ef5350',
         });
         candleSeries.setData(formattedData);
-
+        candleSeries.setMarkers(tradeMarkers);
     }
 
     const renderRsiLines = (rsiData: {
@@ -158,7 +206,7 @@ const Analysis = () => {
         "30min": { value: number, time: UTCTimestamp }[],
         "1h": { value: number, time: UTCTimestamp }[],
         "4h": { value: number, time: UTCTimestamp }[]
-    }) => {
+    }, tradeMarkers: Marker[]) => {
         chartRsiContainerRef.current.innerHTML = '';
         const chart = createChart(chartRsiContainerRef.current, {
             width: chartCandlesContainerRef.current.clientWidth,
@@ -198,6 +246,7 @@ const Analysis = () => {
         lineSeriesOneHour.setData(rsiData["1h"]);
         const lineSeriesFourHours = chart.addLineSeries({ color: 'purple' });
         lineSeriesFourHours.setData(rsiData["4h"]);
+        lineSeriesFiveMin.setMarkers(tradeMarkers);
         chart.timeScale().fitContent();
     }
 
