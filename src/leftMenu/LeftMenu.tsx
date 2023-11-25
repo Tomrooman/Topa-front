@@ -1,4 +1,3 @@
-import CandlestickChartIcon from '@mui/icons-material/CandlestickChart';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
@@ -14,10 +13,11 @@ const drawerWidth = 240;
 
 type PropsType = {
     pageSelection: string
+    choices: { name: string, icon: any }[];
     setPageSelection: (pageSelection: string) => void
 }
 
-const LeftMenu = ({ pageSelection, setPageSelection }: PropsType) => {
+const LeftMenu = ({ pageSelection, choices, setPageSelection }: PropsType) => {
     return (
         <Box sx={{ display: 'flex' }}>
             <Drawer
@@ -59,26 +59,26 @@ const LeftMenu = ({ pageSelection, setPageSelection }: PropsType) => {
                 <List sx={{
                     padding: 0,
                 }}>
-                    {['Analysis'].map((text) => (
-                        <ListItem key={text} disablePadding onClick={() => setPageSelection(text)} sx={{
+                    {choices.map(({ name, icon }) => (
+                        <ListItem key={name} disablePadding onClick={() => setPageSelection(name)} sx={{
                             fontFamily: 'Lexend',
-                            backgroundColor: pageSelection === text ? '#253248' : 'inherit',
-                            color: pageSelection === text ? 'primary.contrastText' : 'inherit',
+                            backgroundColor: pageSelection === name ? '#253248' : 'inherit',
+                            color: pageSelection === name ? 'primary.contrastText' : 'inherit',
                         }}>
                             <ListItemButton sx={{
                                 fontFamily: 'Lexend'
                             }}>
                                 <ListItemIcon sx={{
-                                    color: pageSelection === text ? 'primary.contrastText' : 'inherit',
+                                    color: pageSelection === name ? 'primary.contrastText' : 'inherit',
                                 }}>
-                                    <CandlestickChartIcon />
+                                    {icon}
                                 </ListItemIcon>
                                 <ListItemText sx={{
                                     '& .MuiListItemText-primary': {
                                         fontFamily: 'Lexend',
-                                        fontWeight: pageSelection === text ? '400' : '300',
+                                        fontWeight: pageSelection === name ? '400' : '300',
                                     }
-                                }} primary={text} />
+                                }} primary={name} />
                             </ListItemButton>
                         </ListItem>
                     ))}

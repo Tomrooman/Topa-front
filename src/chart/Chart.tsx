@@ -25,7 +25,7 @@ type Marker = {
     size: number
 }
 
-const Analysis = () => {
+const Chart = () => {
     const chartCandlesContainerRef = useRef({} as HTMLDivElement);
     const chartRsiContainerRef = useRef({} as HTMLDivElement);
     const getResponse = useRef(false);
@@ -138,7 +138,7 @@ const Analysis = () => {
                     position: 'aboveBar' as SeriesMarkerPosition,
                     color: trade.profit > 0 ? "green" : "red",
                     shape: 'arrowDown' as SeriesMarkerShape,
-                    text: trade.type.toUpperCase(),
+                    text: 'CLOSED',
                     size: 2
                 }
             ]);
@@ -285,4 +285,4 @@ const Analysis = () => {
     );
 };
 
-export default Analysis;
+export default Chart;
