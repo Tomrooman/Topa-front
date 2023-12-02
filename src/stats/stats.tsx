@@ -41,6 +41,8 @@ const Row = ({ stats, year, month, day }: { stats: any, year: number, month?: nu
         selectedValue = day;
     }
 
+    let selectedProfit = selectedData.profit;
+
     if (day) {
         selectedData = selectedData.trades;
     } else if (month) {
@@ -64,7 +66,7 @@ const Row = ({ stats, year, month, day }: { stats: any, year: number, month?: nu
                 <TableCell sx={tableContentStyle} scope="row">
                     {selectedValue}
                 </TableCell>
-                <TableCell sx={tableContentStyle} align="right">{selectedData.profit}</TableCell>
+                <TableCell sx={tableContentStyle} align="right">{selectedProfit}</TableCell>
             </TableRow>
             <TableRow>
                 <TableCell style={{ padding: 0 }} colSpan={6}>
