@@ -128,7 +128,7 @@ const Stats = () => {
 
     const synchronizeData = async () => {
         const { data } = await axios.get(`http://localhost:5000/stats`);
-        setStats(data);
+        setStats(data.years);
         console.log({ data })
     }
 
