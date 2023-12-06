@@ -26,15 +26,16 @@ type Marker = {
 }
 
 const Chart = () => {
+    const [render, setRender] = useState(true);
     const chartCandlesContainerRef = useRef({} as HTMLDivElement);
     const chartRsiContainerRef = useRef({} as HTMLDivElement);
     const getResponse = useRef(false);
-    const [year, setYear] = useState('');
-    const [month, setMonth] = useState('');
-    const [day, setDay] = useState('');
-    const [yearList, setYearList] = useState<{ name: string, value: string }[]>([]);
-    const [monthList, setMonthList] = useState<{ name: string, value: string }[]>([]);
-    const [dayList, setDayList] = useState<{ name: string, value: string }[]>([]);
+    const year = useRef('');
+    const month = useRef('');
+    const day = useRef('');
+    const yearList = useRef<{ name: string, value: string }[]>([]);
+    const monthList = useRef<{ name: string, value: string }[]>([]);
+    const dayList = useRef<{ name: string, value: string }[]>([]);
     const [yearsWithMonthsAndDays, setYearsWithMonthsAndDays] = useState<{
         value: string,
         months: {
@@ -52,31 +53,92 @@ const Chart = () => {
         }
     }, [getResponse]);
 
-    const handleOnChangeYear = (event: SelectChangeEvent) => {
-        setYear(event.target.value);
+    const getNumberFromCsvName = (name: string) => name.indexOf('.csv') !== -1 ? name.substring(0, name.indexOf('.csv')) : name
+
+    const handleOnChangeYear = (event: SelectChangeEvent, mustRender = true) => {
+        year.current = event.target.value;
         const selectedYear = yearsWithMonthsAndDays.find((y: any) => y.value === event.target.value);
         if (selectedYear) {
-            setMonthList(selectedYear.months.map((m: any) => ({ name: m.value, value: m.value })));
+            monthList.current = selectedYear.months.map((m: any) => ({ name: m.value, value: m.value }));
+        }
+        if (mustRender) {
+            setRender(!render);
         }
     };
 
-    const handleOnChangeMonth = (event: SelectChangeEvent) => {
-        setMonth(event.target.value);
-        const selectedYear = yearsWithMonthsAndDays.find((y: any) => y.value === year);
+    const handleOnChangeMonth = (event: SelectChangeEvent, mustRender = true) => {
+        month.current = event.target.value;
+        const selectedYear = yearsWithMonthsAndDays.find((y: any) => y.value === year.current);
         if (selectedYear) {
             const selectedMonth = selectedYear.months.find((m: any) => m.value === event.target.value);
             if (selectedMonth) {
-                setDayList(selectedMonth.days.map((m: any) => ({
-                    name: m.value.substring(0, m.value.indexOf('.csv')),
-                    value: m.value.substring(0, m.value.indexOf('.csv'))
-                })));
+                dayList.current = selectedMonth.days.map((m: any) => ({
+                    name: getNumberFromCsvName(m.value),
+                    value: getNumberFromCsvName(m.value)
+                }));
             }
+        }
+        if (mustRender) {
+            setRender(!render);
         }
     };
 
-    const handleOnChangeDay = (event: SelectChangeEvent) => {
-        setDay(event.target.value);
+    const handleOnChangeDay = (event: SelectChangeEvent, mustRender = true) => {
+        day.current = event.target.value;
+        if (mustRender) {
+            setRender(!render);
+        }
     };
+
+    const handlePrevDay = async () => {
+        const dayIndex = dayList.current.findIndex((d: any) => d.value === day.current);
+        if (dayIndex > 0) {
+            const prevDay = dayList.current[dayIndex - 1];
+            handleOnChangeDay({ target: { value: prevDay.value } } as any, false);
+        }
+        if (dayIndex === 0) {
+            const prevMonth = monthList.current.findIndex((m: any) => Number(m.value) === Number(month.current) - 1);
+            if (prevMonth !== -1) {
+                handleOnChangeMonth({ target: { value: monthList.current[prevMonth].value } } as any, false);
+                handleOnChangeDay({ target: { value: dayList.current[dayList.current.length - 1].value } } as any, false);
+            } else {
+                const prevYear = yearList.current.findIndex((y: any) => Number(y.value) === Number(year.current) - 1);
+                if (prevYear !== -1) {
+                    handleOnChangeYear({ target: { value: yearList.current[prevYear].value } } as any, false);
+                    handleOnChangeMonth({ target: { value: monthList.current[monthList.current.length - 1].value } } as any, false);
+                    handleOnChangeDay({ target: { value: dayList.current[dayList.current.length - 1].value } } as any, false);
+                }
+            }
+        }
+        getDataFromApi();
+        setRender(!render);
+    }
+
+    const handleNextDay = () => {
+        const dayIndex = dayList.current.findIndex((d: any) => d.value === day.current);
+        if (dayIndex < dayList.current.length - 1) {
+            const nextDay = dayList.current[dayIndex + 1];
+            handleOnChangeDay({ target: { value: nextDay.value } } as any, false);
+        }
+        if (dayIndex === dayList.current.length - 1) {
+            const nextMonth = monthList.current.findIndex((m: any) => Number(m.value) === Number(month.current) + 1);
+            if (nextMonth !== -1) {
+                handleOnChangeMonth({ target: { value: monthList.current[nextMonth].value } } as any, false);
+                handleOnChangeDay({ target: { value: dayList.current[0].value } } as any, false);
+            } else {
+                const nextYear = yearList.current.findIndex((y: any) => Number(y.value) === Number(year.current) + 1);
+                if (nextYear !== -1) {
+                    handleOnChangeYear({ target: { value: yearList.current[nextYear].value } } as any, false);
+                    handleOnChangeMonth({ target: { value: monthList.current[0].value } } as any, false);
+                    handleOnChangeDay({ target: { value: dayList.current[0].value } } as any, false);
+                }
+            }
+        }
+        getDataFromApi();
+        setRender(!render);
+    }
+
+
 
     const handleOnClick = () => {
         getDataFromApi();
@@ -85,11 +147,11 @@ const Chart = () => {
     const getAllDaysFromApi = async () => {
         const res = await axios.get(`http://localhost:5000/days_list`);
         setYearsWithMonthsAndDays(res.data);
-        setYearList(res.data.map((d: any) => ({ name: d.value, value: d.value })));
+        yearList.current = res.data.map((d: any) => ({ name: getNumberFromCsvName(d.value), value: getNumberFromCsvName(d.value) }));
     };
 
     const getDataFromApi = async () => {
-        const { data } = await axios.get(`http://localhost:5000/candles?year=${year}&month=${month}&day=${day}`);
+        const { data } = await axios.get(`http://localhost:5000/candles?year=${year.current}&month=${month.current}&day=${day.current}`);
         const formattedCandlesData = data.candles.map((d: any) => ({
             open: d.open,
             high: d.high,
@@ -256,10 +318,12 @@ const Chart = () => {
                 "display": "flex",
                 justifyContent: "center"
             }}>
-                <SelectComponent label='Year' selectedItem={year} menuItems={yearList} handleOnChange={handleOnChangeYear} />
-                <SelectComponent label='Month' selectedItem={month} menuItems={monthList} handleOnChange={handleOnChangeMonth} />
-                <SelectComponent label='Day' selectedItem={day} menuItems={dayList} handleOnChange={handleOnChangeDay} />
-                <Button variant="contained" onClick={handleOnClick} disabled={!(year && month && day)}>Confirmer</Button>
+                <SelectComponent label='Year' selectedItem={year.current} menuItems={yearList.current} handleOnChange={handleOnChangeYear} />
+                <SelectComponent label='Month' selectedItem={month.current} menuItems={monthList.current} handleOnChange={handleOnChangeMonth} />
+                <SelectComponent label='Day' selectedItem={day.current} menuItems={dayList.current} handleOnChange={handleOnChangeDay} />
+                <Button variant="contained" onClick={handleOnClick} disabled={!(year.current && month.current && day.current)}>Confirmer</Button>
+                <Button onClick={handlePrevDay}>Prev</Button>
+                <Button onClick={handleNextDay}>Next</Button>
             </div>
             <div style={{
                 "display": "flex",
