@@ -41,7 +41,8 @@ const Row = ({ stats, year, month, day }: { stats: any, year: number, month?: nu
         selectedValue = day;
     }
 
-    let selectedProfit = selectedData.profit;
+    const selectedProfit = selectedData.profit;
+    const selectedPercentage = selectedData.percentage_from_balance;
 
     if (day) {
         selectedData = selectedData.trades;
@@ -66,7 +67,8 @@ const Row = ({ stats, year, month, day }: { stats: any, year: number, month?: nu
                 <TableCell sx={tableContentStyle} scope="row">
                     {selectedValue}
                 </TableCell>
-                <TableCell sx={tableContentStyle} align="right">{selectedProfit}</TableCell>
+                <TableCell sx={tableContentStyle} align='right'>{selectedPercentage} %</TableCell>
+                <TableCell sx={tableContentStyle} align="right">{Math.round(selectedProfit)}</TableCell>
             </TableRow>
             <TableRow>
                 <TableCell style={{ padding: 0 }} colSpan={6}>
@@ -77,6 +79,7 @@ const Row = ({ stats, year, month, day }: { stats: any, year: number, month?: nu
                                     <TableRow>
                                         <TableCell sx={tableHeaderStyle} />
                                         <TableCell sx={tableHeaderStyle}>{selectedType === "Année" ? 'Mois' : 'Jour'}</TableCell>
+                                        <TableCell sx={tableHeaderStyle} align='right'>Pourcentage</TableCell>
                                         <TableCell sx={tableHeaderStyle} align="right">Profit</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -101,7 +104,7 @@ const Row = ({ stats, year, month, day }: { stats: any, year: number, month?: nu
                                                 {d.opened_at}
                                             </TableCell>
                                             <TableCell sx={tableContentStyle}>{d.closed_at}</TableCell>
-                                            <TableCell sx={tableContentStyle} align="right">{d.profit}</TableCell>
+                                            <TableCell sx={tableContentStyle} align="right">{Math.round(d.profit)}</TableCell>
                                         </TableRow>
                                     </TableBody>
                                 )}
@@ -140,6 +143,7 @@ const Stats = () => {
                     <TableRow>
                         <TableCell sx={tableHeaderStyle} />
                         <TableCell sx={tableHeaderStyle}>Année</TableCell>
+                        <TableCell sx={tableHeaderStyle} align='right'>Pourcentage</TableCell>
                         <TableCell sx={tableHeaderStyle} align="right">Profit</TableCell>
                     </TableRow>
                 </TableHead>
